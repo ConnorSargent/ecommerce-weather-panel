@@ -4,17 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Weather Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
 </head>
 <body>
   <main class="panel">
 
+    <header class="panel-header">
+      <h1 class="panel-title">Gear for the weather ahead</h1>
+      <p class="panel-sub">Tell us where you're heading and we'll check the forecast, then line up the right kit for your trip.</p>
+    </header>
+
     <!-- Search spans the full panel, columns sit underneath -->
     <div class="search">
-      <label for="search-input">Where are you off to?</label>
       <input id="search-input" type="search" placeholder="Search a UK town or city..."
-             autocomplete="off" aria-controls="search-results">
+             aria-label="Search a UK town or city" autocomplete="off" aria-controls="search-results">
 
       <!-- Buttons to select a location/Native button would be better on mobile-->
       <ul id="search-results" class="search-results"></ul>
@@ -32,17 +39,16 @@
 
     <!-- Right column: merchandising -->
     <section class="merch-col">
-      <p class="merch-eyebrow">Planning your next trip?</p>
       <h2 id="merch-message" class="merch-message"></h2>
 
       <!-- placeholder product cards, real ones would come from shopify-->
       <div class="product-carousel" aria-hidden="true">
-        <div class="product-skeleton"></div>
-        <div class="product-skeleton"></div>
-        <div class="product-skeleton"></div>
-        <div class="product-skeleton"></div>
-        <div class="product-skeleton"></div>
-        <div class="product-skeleton"></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+        <div class="product-skeleton"><div class="sk-img"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
       </div>
 
       <a href="#" class="shop-all">Shop All Outerwear</a>
