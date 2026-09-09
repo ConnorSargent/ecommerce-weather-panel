@@ -27,10 +27,12 @@ const weatherMap = {
   95: { text: 'Thunderstorm', condition: 'rain' }
 };
 
+// headline + CTA move together per weather state. In a real store each
+// would also carry its own collection URL
 const merchMessages = {
-  rain: 'Waterproofs are 20% off this week',
-  cold: 'Time for knitwear',
-  default: 'Check out our new arrivals'
+  rain: { message: 'Waterproofs are 20% off this week', cta: 'Shop Waterproofs' },
+  cold: { message: 'Time for knitwear', cta: 'Shop Knitwear' },
+  default: { message: 'Check out our new arrivals', cta: 'Shop All Outerwear' }
 };
 
 async function fetchJSON(url) {
@@ -120,6 +122,11 @@ function initUI() {
 
   input.addEventListener('input', runSearch);
 
+  // dropdown overlays the page now, so close it on any outside click
+  document.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.search')) resultsEl.innerHTML = '';
+  });
+
   // never show an empty panel - last place they picked, or the configured default
   let place = DEFAULT_LOCATION;
   try {
@@ -148,6 +155,7 @@ async function loadWeather(place) {
   currentEl.classList.add('loading');
   try {
     const forecast = await getForecast(place.latitude, place.longitude);
+    applySpoof(forecast);
     statusEl.textContent = '';
     renderCurrent(place, forecast.current);
     renderOutlook(forecast.daily);
@@ -159,14 +167,29 @@ async function loadWeather(place) {
   }
 }
 
+// Demo helper: add ?spoof=rain|cold|clear to the URL to force a weather
+// state and preview the matching merch message without waiting for real rain
+function applySpoof(forecast) {
+  const spoof = new URLSearchParams(location.search).get('spoof');
+  const override = {
+    rain: { weather_code: 63, apparent_temperature: 11 },
+    cold: { weather_code: 71, apparent_temperature: 1 },
+    clear: { weather_code: 0, apparent_temperature: 15 }
+  }[spoof];
+  if (override) Object.assign(forecast.current, override);
+}
+
 function renderCurrent(place, c) {
   const el = document.getElementById('current');
   el.innerHTML = `
     <h3 class="place-name"></h3>
     <p class="temp">${Math.round(c.temperature_2m)}°C</p>
-    <p>Feels like ${Math.round(c.apparent_temperature)}°C</p>
-    <p>${describeWeather(c.weather_code).text}</p>
-    <p>Wind ${Math.round(c.wind_speed_10m)} km/h</p>`;
+    <p class="condition">${describeWeather(c.weather_code).text}</p>
+    <dl class="stats">
+      <div><dt>Feels like</dt><dd>${Math.round(c.apparent_temperature)}°C</dd></div>
+      <div><dt>Wind</dt><dd>${Math.round(c.wind_speed_10m)} km/h</dd></div>
+      <div><dt>Rain now</dt><dd>${c.precipitation} mm</dd></div>
+    </dl>`;
   // name comes from the geocoding API, so treat it as text not markup
   const nameEl = el.querySelector('.place-name');
   nameEl.textContent = place.name;
@@ -196,7 +219,9 @@ function renderOutlook(d) {
 
 function renderMerch(c) {
   const condition = getMerchCondition(c.weather_code, c.apparent_temperature);
-  document.getElementById('merch-message').textContent = merchMessages[condition];
+  const { message, cta } = merchMessages[condition];
+  document.getElementById('merch-message').textContent = message;
+  document.querySelector('.shop-all').textContent = cta;
 }
 
 document.addEventListener('DOMContentLoaded', initUI);
