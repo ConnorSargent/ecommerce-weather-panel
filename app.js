@@ -9,22 +9,22 @@ const FETCH_TIMEOUT_MS = 8000;
 const DEFAULT_LOCATION = { name: 'Manchester', latitude: 53.48, longitude: -2.24, isStore: true };
 
 const weatherMap = {
-  0:  { text: 'Clear sky', condition: 'default' },
-  1:  { text: 'Mainly clear', condition: 'default' },
-  2:  { text: 'Partly cloudy', condition: 'default' },
-  3:  { text: 'Overcast', condition: 'default' },
-  45: { text: 'Fog', condition: 'default' },
-  48: { text: 'Depositing rime fog', condition: 'cold' },
-  51: { text: 'Light drizzle', condition: 'rain' },
-  53: { text: 'Moderate drizzle', condition: 'rain' },
-  55: { text: 'Dense drizzle', condition: 'rain' },
-  61: { text: 'Slight rain', condition: 'rain' },
-  63: { text: 'Moderate rain', condition: 'rain' },
-  65: { text: 'Heavy rain', condition: 'rain' },
-  71: { text: 'Slight snow', condition: 'cold' },
-  73: { text: 'Moderate snow', condition: 'cold' },
-  75: { text: 'Heavy snow', condition: 'cold' },
-  95: { text: 'Thunderstorm', condition: 'rain' }
+  0:  { text: 'Clear sky', condition: 'default', icon: '☀️' },
+  1:  { text: 'Mainly clear', condition: 'default', icon: '🌤️' },
+  2:  { text: 'Partly cloudy', condition: 'default', icon: '⛅' },
+  3:  { text: 'Overcast', condition: 'default', icon: '☁️' },
+  45: { text: 'Fog', condition: 'default', icon: '🌫️' },
+  48: { text: 'Depositing rime fog', condition: 'cold', icon: '🌫️' },
+  51: { text: 'Light drizzle', condition: 'rain', icon: '🌦️' },
+  53: { text: 'Moderate drizzle', condition: 'rain', icon: '🌦️' },
+  55: { text: 'Dense drizzle', condition: 'rain', icon: '🌧️' },
+  61: { text: 'Slight rain', condition: 'rain', icon: '🌧️' },
+  63: { text: 'Moderate rain', condition: 'rain', icon: '🌧️' },
+  65: { text: 'Heavy rain', condition: 'rain', icon: '🌧️' },
+  71: { text: 'Slight snow', condition: 'cold', icon: '🌨️' },
+  73: { text: 'Moderate snow', condition: 'cold', icon: '🌨️' },
+  75: { text: 'Heavy snow', condition: 'cold', icon: '❄️' },
+  95: { text: 'Thunderstorm', condition: 'rain', icon: '⛈️' }
 };
 
 // headline + CTA move together per weather state. In a real store each
@@ -32,7 +32,7 @@ const weatherMap = {
 const merchMessages = {
   rain: { message: 'Waterproofs are 20% off this week', cta: 'Shop Waterproofs' },
   cold: { message: 'Time for knitwear', cta: 'Shop Knitwear' },
-  default: { message: 'Check out our new arrivals', cta: 'Shop All Outerwear' }
+  default: { message: 'Check out our new arrivals', cta: 'Shop New Arrivals' }
 };
 
 async function fetchJSON(url) {
@@ -67,7 +67,7 @@ async function getForecast(latitude, longitude) {
 }
 
 function describeWeather(code) {
-  return weatherMap[code] || { text: 'Unknown', condition: 'default' };
+  return weatherMap[code] || { text: 'Unknown', condition: 'default', icon: '🌡️' };
 }
 
 // Rain takes priority. The extra feels-like check is because a clear day
@@ -154,14 +154,26 @@ async function loadWeather(place) {
   statusEl.textContent = 'Loading weather...';
   currentEl.classList.add('loading');
   try {
+    // ?spoof=down simulates the weather API being unreachable
+    if (new URLSearchParams(location.search).get('spoof') === 'down') throw new Error('spoofed outage');
     const forecast = await getForecast(place.latitude, place.longitude);
     applySpoof(forecast);
     statusEl.textContent = '';
     renderCurrent(place, forecast.current);
     renderOutlook(forecast.daily);
-    renderMerch(forecast.current);
+    renderMerch(place, forecast.current);
   } catch (err) {
-    statusEl.textContent = err.message;
+    // searched place failed? fall back to the store's weather once
+    if (!place.isStore) {
+      await loadWeather(DEFAULT_LOCATION);
+      statusEl.textContent = `Couldn't get weather for ${place.name} - showing our store instead.`;
+      return;
+    }
+    // API is down entirely - drop the weather UI and run as a plain merch section
+    document.querySelector('.panel').classList.add('weather-down');
+    document.getElementById('merch-context').textContent = 'Fresh in this week';
+    document.getElementById('merch-message').textContent = merchMessages.default.message;
+    document.querySelector('.shop-all').textContent = merchMessages.default.cta;
   } finally {
     currentEl.classList.remove('loading');
   }
@@ -181,10 +193,11 @@ function applySpoof(forecast) {
 
 function renderCurrent(place, c) {
   const el = document.getElementById('current');
+  const weather = describeWeather(c.weather_code);
   el.innerHTML = `
     <h3 class="place-name"></h3>
     <p class="temp">${Math.round(c.temperature_2m)}°C</p>
-    <p class="condition">${describeWeather(c.weather_code).text}</p>
+    <p class="condition">${weather.icon} ${weather.text}</p>
     <dl class="stats">
       <div><dt>Feels like</dt><dd>${Math.round(c.apparent_temperature)}°C</dd></div>
       <div><dt>Wind</dt><dd>${Math.round(c.wind_speed_10m)} km/h</dd></div>
@@ -206,20 +219,28 @@ function renderOutlook(d) {
   const el = document.getElementById('outlook');
   el.innerHTML = '';
   for (let i = 1; i <= 3; i++) {
+    const w = describeWeather(d.weather_code[i]);
     const row = document.createElement('div');
     row.className = 'day';
     row.innerHTML = `
-      <span class="day-name">${new Date(d.time[i]).toLocaleDateString('en-GB', { weekday: 'short' })}</span>
-      <span>${Math.round(d.temperature_2m_max[i])}° / ${Math.round(d.temperature_2m_min[i])}°</span>
-      <span>${d.precipitation_probability_max[i]}% rain</span>
-      <span>${describeWeather(d.weather_code[i]).text}</span>`;
+      <span class="day-icon">${w.icon}</span>
+      <div class="day-main">
+        <span class="day-name">${new Date(d.time[i]).toLocaleDateString('en-GB', { weekday: 'long' })}</span>
+        <span class="day-cond">${w.text}</span>
+      </div>
+      <div class="day-temps">
+        <span class="day-range">${Math.round(d.temperature_2m_max[i])}° <span class="day-lo">/ ${Math.round(d.temperature_2m_min[i])}°</span></span>
+        <span class="day-rain">💧 ${d.precipitation_probability_max[i]}%</span>
+      </div>`;
     el.appendChild(row);
   }
 }
 
-function renderMerch(c) {
+function renderMerch(place, c) {
   const condition = getMerchCondition(c.weather_code, c.apparent_temperature);
   const { message, cta } = merchMessages[condition];
+  // staff-pick framing only makes sense at our own store's weather
+  document.getElementById('merch-context').textContent = place.isStore ? "What we're wearing today" : '';
   document.getElementById('merch-message').textContent = message;
   document.querySelector('.shop-all').textContent = cta;
 }

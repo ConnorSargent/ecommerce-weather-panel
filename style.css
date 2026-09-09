@@ -3,452 +3,554 @@
    Every colour below derives from --brand via relative OKLCH, so a new
    brand colour (or radius, or font pair) re-themes the whole panel.
    ========================================================================== */
-:root {
-  --brand: #435f32;
-  --radius: 20px;                          /* outer corner rounding */
-  --radius-inner: calc(var(--radius) - 8px);
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Instrument Sans", system-ui, sans-serif;
-}
-
-/* Derived tokens - every colour is --brand pushed around in OKLCH,
-   so a reskin never needs to touch these */
-:root {
-  --paper: oklch(from var(--brand) 97.5% 0.008 h);
-  --brand-bright: oklch(from var(--brand) calc(l + 0.04) c h);
-  --brand-dark: oklch(from var(--brand) calc(l - 0.09) calc(c + 0.01) h);
-  --brand-deep: oklch(from var(--brand) calc(l - 0.15) c h);
-  --on-brand: oklch(from var(--brand) 98% 0.005 h);
-  --on-brand-muted: oklch(from var(--brand) 86% 0.035 h);
-  --on-brand-line: oklch(from var(--brand) 75% 0.05 h / 0.35);
-  --skeleton: oklch(from var(--brand) 62% 0.06 h / 0.28);
-  --text: oklch(from var(--brand) 25% 0.02 h);
-  --shadow: 0 24px 60px -28px oklch(from var(--brand) 30% 0.06 h / 0.55);
-}
-
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  color: var(--text);
-  background: var(--paper);
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Mobile first: one column. Desktop: weather 35% / merch 65% */
-.panel {
-  display: grid;
-  gap: 1.5rem;
-  box-sizing: border-box;
-  width: min(1100px, 100% - 1.5rem);
-  margin: 1.25rem auto;
-  padding: 1.5rem 1.25rem;
-  background:
-    radial-gradient(120% 90% at 85% -10%, oklch(from var(--brand) calc(l + 0.08) calc(c + 0.02) h / 0.55), transparent 60%),
-    linear-gradient(150deg, var(--brand-bright), var(--brand-dark) 75%);
-  color: var(--on-brand);
-  border: 1px solid oklch(100% 0 0 / 0.08);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-@media (min-width: 768px) {
+   :root {
+    --brand: #435f32;
+    --radius: 20px;                          /* outer corner rounding */
+    --radius-inner: calc(var(--radius) - 8px);
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "Instrument Sans", system-ui, sans-serif;
+  }
+  
+  /* Derived tokens - every colour is --brand pushed around in OKLCH,
+     so a reskin never needs to touch these */
+  :root {
+    --paper: oklch(from var(--brand) 97.5% 0.008 h);
+    --brand-bright: oklch(from var(--brand) calc(l + 0.04) c h);
+    --brand-dark: oklch(from var(--brand) calc(l - 0.09) calc(c + 0.01) h);
+    --brand-deep: oklch(from var(--brand) calc(l - 0.15) c h);
+    --on-brand: oklch(from var(--brand) 98% 0.005 h);
+    --on-brand-muted: oklch(from var(--brand) 86% 0.035 h);
+    --on-brand-line: oklch(from var(--brand) 75% 0.05 h / 0.35);
+    --skeleton: oklch(from var(--brand) 62% 0.06 h / 0.28);
+    --text: oklch(from var(--brand) 25% 0.02 h);
+    --shadow: 0 24px 60px -28px oklch(from var(--brand) 30% 0.06 h / 0.55);
+  }
+  
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--paper);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* Mobile first: one column. Desktop: weather 35% / merch 65% */
   .panel {
-    grid-template-columns: 35% 1fr;
-    padding: 2.25rem 2rem;
+    display: grid;
+    gap: 1.5rem;
+    box-sizing: border-box;
+    width: min(1100px, 100% - 1.5rem);
+    margin: 1.25rem auto;
+    padding: 1.5rem 1.25rem;
+    background:
+      radial-gradient(120% 90% at 85% -10%, oklch(from var(--brand) calc(l + 0.08) calc(c + 0.02) h / 0.55), transparent 60%),
+      linear-gradient(150deg, var(--brand-bright), var(--brand-dark) 75%);
+    color: var(--on-brand);
+    border: 1px solid oklch(100% 0 0 / 0.08);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
   }
-
-  /* header + search span both columns */
-  .panel-header,
-  .search {
-    grid-column: 1 / -1;
+  
+  @media (min-width: 768px) {
+    .panel {
+      grid-template-columns: 30% 1fr;
+      padding: 2.25rem 2rem;
+    }
+  
+    /* header + search span both columns */
+    .panel-header,
+    .search {
+      grid-column: 1 / -1;
+    }
   }
-}
-
-/* Staggered entrance - one orchestrated reveal, then everything is still */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(12px); }
-}
-
-.panel-header { animation: rise 0.55s 0.05s ease-out backwards; }
-.search       { animation: rise 0.55s 0.12s ease-out backwards; }
-.weather-col  { animation: rise 0.55s 0.2s ease-out backwards; }
-.merch-col    { animation: rise 0.55s 0.3s ease-out backwards; }
-
-/* --- Header --- */
-
-.panel-title {
-  margin: 0 0 0.4rem;
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4.5vw, 2.9rem);
-  font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: -0.015em;
-}
-
-.panel-sub {
-  margin: 0;
-  max-width: 46ch;
-  font-size: 1rem;
-  color: var(--on-brand-muted);
-}
-
-/* --- Search --- */
-
-#search-input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 1rem 1.4rem;
-  font-size: 1.1rem;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--paper);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  box-shadow: inset 0 1px 3px oklch(0% 0 0 / 0.12);
-  transition: box-shadow 0.15s ease;
-}
-
-#search-input:focus {
-  outline: 2px solid var(--on-brand);
-  outline-offset: 2px;
-}
-
-/* overlay dropdown - doesn't push the layout down */
-.search { position: relative; }
-
-.search-results {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  left: 0;
-  right: 0;
-  z-index: 10;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-radius: var(--radius-inner);
-  overflow: hidden;
-  box-shadow: 0 12px 28px -12px oklch(0% 0 0 / 0.4);
-}
-
-.search-results button {
-  box-sizing: border-box;
-  width: 100%;
-  text-align: left;
-  padding: 0.6rem 0.9rem;
-  font-size: 1rem;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--paper);
-  border: none;
-  border-bottom: 1px solid oklch(from var(--brand) 88% 0.02 h);
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.search-results li:last-child button { border-bottom: none; }
-
-.search-results button:hover,
-.search-results button:focus-visible {
-  background: oklch(from var(--brand) 92% 0.03 h);
-}
-
-/* zero footprint when empty, but always in the DOM so aria-live keeps working */
-.status {
-  margin: 0;
-  color: var(--on-brand-muted);
-  font-size: 0.9rem;
-}
-
-.status:not(:empty) { margin-bottom: 0.75rem; }
-
-/* --- Current conditions --- */
-
-.current-card {
-  padding: 1.25rem 1.4rem 1.4rem;
-  background: linear-gradient(160deg, var(--brand-dark), var(--brand-deep));
-  border: 1px solid oklch(100% 0 0 / 0.1);
-  border-radius: var(--radius-inner);
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.12);
-}
-
-.current-card p { margin: 0.15rem 0; }
-
-.current-card .place-name {
-  margin: 0 0 0.4rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.store-badge {
-  display: inline-block;
-  margin-left: 0.45rem;
-  padding: 0.14rem 0.6rem;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--on-brand);
-  background: oklch(100% 0 0 / 0.14);
-  border: 1px solid oklch(100% 0 0 / 0.18);
-  border-radius: 999px;
-  vertical-align: middle;
-}
-
-.current-card .temp {
-  font-family: var(--font-display);
-  font-size: clamp(3.2rem, 6vw, 4rem);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin: 0.1rem 0 0.35rem;
-}
-
-.current-card .condition {
-  margin: 0;
-  font-size: 1.05rem;
-  color: var(--on-brand-muted);
-}
-
-.current-card .stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin: 1.1rem 0 0;
-  padding-top: 0.9rem;
-  border-top: 1px solid var(--on-brand-line);
-}
-
-.current-card dt {
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--on-brand-muted);
-}
-
-.current-card dd {
-  margin: 0.15rem 0 0;
-  font-size: 1rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.current-card.loading { animation: pulse 1.2s ease-in-out infinite; }
-
-/* --- Outlook --- */
-
-.outlook { margin-top: 1.1rem; }
-
-.outlook .day {
-  display: grid;
-  grid-template-columns: 2.5rem 4.5rem 4.5rem 1fr;
-  gap: 0.5rem;
-  align-items: baseline;
-  padding: 0.55rem 0.25rem;
-  border-bottom: 1px solid var(--on-brand-line);
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--on-brand-muted);
-}
-
-.outlook .day:last-child { border-bottom: none; }
-
-.outlook .day-name {
-  font-weight: 600;
-  color: var(--on-brand);
-}
-
-/* --- Merchandising --- */
-
-.merch-message {
-  margin: 0 0 1.25rem;
-  padding-right: 5rem; /* keeps the headline clear of the carousel arrows */
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  min-height: 1.2em; /* no jump when the message arrives */
-}
-
-/* --- Product carousel: ~2.5 cards visible, snap per card --- */
-
-.product-carousel {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 38%;
-  gap: 1rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 0.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--on-brand-line) transparent;
-}
-
-.product-carousel .product-skeleton {
-  scroll-snap-align: start;
-}
-
-.product-skeleton {
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  aspect-ratio: 4 / 5;
-  padding: 0.6rem;
-  border-radius: var(--radius-inner);
-  background: oklch(100% 0 0 / 0.05);
-  border: 1px solid oklch(100% 0 0 / 0.08);
-}
-
-.product-skeleton .sk-img {
-  flex: 1;
-  border-radius: calc(var(--radius-inner) - 5px);
-  background: var(--skeleton);
-}
-
-.product-skeleton .sk-line {
-  height: 0.6rem;
-  width: 70%;
-  border-radius: 999px;
-  background: var(--skeleton);
-}
-
-.product-skeleton .sk-line.short {
-  width: 40%;
-  margin-bottom: 0.15rem;
-}
-
-/* shimmer sweep reads more "product loading" than a flat pulse */
-.product-skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(100deg, transparent 30%, oklch(100% 0 0 / 0.14) 50%, transparent 70%);
-  animation: shimmer 2.4s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  100% { transform: translateX(100%); }
-}
-
-@keyframes pulse {
-  50% { opacity: 0.55; }
-}
-
-/* Carousel arrows + pagination dots (CSS Overflow 5, Chrome 135+).
-   Firefox/Safari ignore these rules and keep the plain swipe carousel */
-.product-carousel {
-  scroll-marker-group: after;
-  anchor-name: --products;
-  margin-bottom: 1.25rem; /* room for the dots */
-}
-
-.product-carousel::scroll-button(*) {
-  position: fixed;
-  position-anchor: --products;
-  width: 2.1rem;
-  height: 2.1rem;
-  margin-bottom: 1.1rem; /* lift into the title row above the carousel */
-  border: 1px solid oklch(100% 0 0 / 0.25);
-  border-radius: 50%;
-  background: oklch(100% 0 0 / 0.1);
-  color: var(--on-brand);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.product-carousel::scroll-button(*):hover:not(:disabled) {
-  background: oklch(100% 0 0 / 0.22);
-}
-
-.product-carousel::scroll-button(*):disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-/* both sit in the row above the carousel, flush with its right edge -
-   the left arrow is shifted over by one button width */
-.product-carousel::scroll-button(left) {
-  content: "◄" / "Previous products";
-  position-area: block-start span-inline-start;
-  justify-self: end;
-  translate: calc(-100% - 0.5rem) 0;
-}
-
-.product-carousel::scroll-button(right) {
-  content: "►" / "Next products";
-  position-area: block-start span-inline-start;
-  justify-self: end;
-}
-
-.product-carousel::scroll-marker-group {
-  position: fixed;
-  position-anchor: --products;
-  position-area: block-end;
-  display: flex;
-  gap: 0.5rem;
-  padding-top: 0.6rem;
-}
-
-.product-skeleton::scroll-marker {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border: 1px solid var(--on-brand);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.product-skeleton::scroll-marker:target-current {
-  background: var(--on-brand);
-}
-
-/* --- Shop all --- */
-
-.shop-all {
-  display: block;
-  width: fit-content;
-  margin-inline: auto;
-  margin-top: 2.5rem; /* clear of the carousel dots, which hang below the cards */
-  padding: 0.75rem 1.6rem;
-  background: var(--paper);
-  color: var(--brand-deep);
-  text-decoration: none;
-  font-weight: 600;
-  border-radius: 999px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.shop-all::after {
-  content: " →";
-  display: inline-block;
-  transition: transform 0.15s ease;
-}
-
-.shop-all:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px -8px oklch(0% 0 0 / 0.45);
-}
-
-.shop-all:hover::after { transform: translateX(3px); }
-
-.shop-all:focus-visible {
-  outline: 2px solid var(--on-brand);
-  outline-offset: 3px;
-}
-
-/* Removed for testing */
-
-/* @media (prefers-reduced-motion: reduce) {
-  .search, .weather-col, .merch-col { animation: none; }
-  .product-skeleton::after, .current-card.loading { animation: none; }
-  .shop-all, .shop-all::after { transition: none; }
-} */
+  
+  /* Weather API down: hide the weather UI, run as a plain merch section */
+  .panel.weather-down .search,
+  .panel.weather-down .panel-sub,
+  .panel.weather-down .weather-col { display: none; }
+  .panel.weather-down .merch-col { grid-column: 1 / -1; }
+  
+  /* grid items default to min-width auto, which lets the scroll carousels'
+     content min-width blow the panel out past the viewport */
+  .weather-col, .merch-col { min-width: 0; }
+  
+  /* Staggered entrance - one orchestrated reveal, then everything is still */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+  
+  .panel-header { animation: rise 0.55s 0.05s ease-out backwards; }
+  .search       { animation: rise 0.55s 0.12s ease-out backwards; }
+  .weather-col  { animation: rise 0.55s 0.2s ease-out backwards; }
+  .merch-col    { animation: rise 0.55s 0.3s ease-out backwards; }
+  
+  /* --- Header --- */
+  
+  .panel-title {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4.5vw, 2.9rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+  
+  .panel-sub {
+    margin: 0;
+    max-width: 46ch;
+    font-size: 1rem;
+    color: var(--on-brand-muted);
+  }
+  
+  /* --- Search --- */
+  
+  #search-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 1rem 1.4rem;
+    font-size: 1.1rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--paper);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    box-shadow: inset 0 1px 3px oklch(0% 0 0 / 0.12);
+    transition: box-shadow 0.15s ease;
+  }
+  
+  #search-input:focus {
+    outline: 2px solid var(--on-brand);
+    outline-offset: 2px;
+  }
+  
+  /* overlay dropdown - doesn't push the layout down */
+  .search { position: relative; }
+  
+  .search-results {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    right: 0;
+    z-index: 10;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--radius-inner);
+    overflow: hidden;
+    box-shadow: 0 12px 28px -12px oklch(0% 0 0 / 0.4);
+  }
+  
+  .search-results button {
+    box-sizing: border-box;
+    width: 100%;
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--paper);
+    border: none;
+    border-bottom: 1px solid oklch(from var(--brand) 88% 0.02 h);
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  
+  .search-results li:last-child button { border-bottom: none; }
+  
+  .search-results button:hover,
+  .search-results button:focus-visible {
+    background: oklch(from var(--brand) 92% 0.03 h);
+  }
+  
+  /* zero footprint when empty, but always in the DOM so aria-live keeps working */
+  .status {
+    margin: 0;
+    color: var(--on-brand-muted);
+    font-size: 0.9rem;
+  }
+  
+  .status:not(:empty) { margin-bottom: 0.75rem; }
+  
+  /* --- Current conditions --- */
+  
+  .current-card {
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: linear-gradient(160deg, var(--brand-dark), var(--brand-deep));
+    border: 1px solid oklch(100% 0 0 / 0.1);
+    border-radius: var(--radius-inner);
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.12);
+  }
+  
+  .current-card p { margin: 0.15rem 0; }
+  
+  .current-card .place-name {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  
+  .store-badge {
+    display: inline-block;
+    margin-left: 0.45rem;
+    padding: 0.14rem 0.6rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--on-brand);
+    background: oklch(100% 0 0 / 0.14);
+    border: 1px solid oklch(100% 0 0 / 0.18);
+    border-radius: 999px;
+    vertical-align: middle;
+  }
+  
+  .current-card .temp {
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 6vw, 4rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin: 0.1rem 0 0.35rem;
+  }
+  
+  .current-card .condition {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--on-brand-muted);
+  }
+  
+  .current-card .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.1rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--on-brand-line);
+  }
+  
+  .current-card dt {
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--on-brand-muted);
+  }
+  
+  .current-card dd {
+    margin: 0.15rem 0 0;
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .current-card.loading { animation: pulse 1.2s ease-in-out infinite; }
+  
+  /* --- Outlook --- */
+  
+  .outlook-card {
+    margin-top: 1rem;
+    padding: 1.1rem 1.4rem 0.4rem;
+    background: oklch(100% 0 0 / 0.05);
+    border: 1px solid oklch(100% 0 0 / 0.08);
+    border-radius: var(--radius-inner);
+  }
+  
+  .outlook-title {
+    margin: 0;
+    padding-bottom: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--on-brand-muted);
+    border-bottom: 1px solid var(--on-brand-line);
+  }
+  
+  .outlook .day {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--on-brand-line);
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .outlook .day:last-child { border-bottom: none; }
+  
+  .outlook .day-icon { font-size: 1.35rem; }
+  
+  .outlook .day-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  
+  .outlook .day-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  
+  .outlook .day-cond {
+    font-size: 0.78rem;
+    color: var(--on-brand-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .outlook .day-temps {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .outlook .day-range {
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  
+  .outlook .day-lo { color: var(--on-brand-muted); font-weight: 400; }
+  
+  .outlook .day-rain {
+    font-size: 0.75rem;
+    color: var(--on-brand-muted);
+  }
+  
+  /* --- Merchandising --- */
+  
+  /* store-state framing line - collapses to nothing when empty */
+  .merch-context {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--on-brand-muted);
+  }
+  
+  .merch-context:not(:empty) { margin-bottom: 0.45rem; }
+  
+  .merch-message {
+    margin: 0 0 1.25rem;
+    padding-right: 5rem; /* keeps the headline clear of the carousel arrows */
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    min-height: 1.2em; /* no jump when the message arrives */
+  }
+  
+  /* --- Product carousel: ~2.5 cards visible, snap per card --- */
+  
+  .product-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 38%;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--on-brand-line) transparent;
+  }
+  
+  .product-carousel .product-skeleton {
+    scroll-snap-align: start;
+  }
+  
+  .product-skeleton {
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    aspect-ratio: 4 / 5;
+    padding: 0.6rem;
+    border-radius: var(--radius-inner);
+    background: oklch(100% 0 0 / 0.05);
+    border: 1px solid oklch(100% 0 0 / 0.08);
+  }
+  
+  .product-skeleton .sk-img {
+    flex: 1;
+    border-radius: calc(var(--radius-inner) - 5px);
+    background: var(--skeleton);
+  }
+  
+  .product-skeleton .sk-line {
+    height: 0.6rem;
+    width: 70%;
+    border-radius: 999px;
+    background: var(--skeleton);
+  }
+  
+  .product-skeleton .sk-line.short {
+    width: 40%;
+    margin-bottom: 0.15rem;
+  }
+  
+  /* shimmer sweep reads more "product loading" than a flat pulse */
+  .product-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(100deg, transparent 30%, oklch(100% 0 0 / 0.14) 50%, transparent 70%);
+    animation: shimmer 2.4s ease-in-out infinite;
+  }
+  
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  
+  @keyframes pulse {
+    50% { opacity: 0.55; }
+  }
+  
+  /* Carousel arrows + pagination dots (CSS Overflow 5, Chrome 135+).
+     Firefox/Safari ignore these rules and keep the plain swipe carousel */
+  .product-carousel {
+    scroll-marker-group: after;
+    anchor-name: --products;
+    margin-bottom: 1.25rem; /* room for the dots */
+  }
+  
+  .product-carousel::scroll-button(*) {
+    position: fixed;
+    position-anchor: --products;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin-bottom: 1.1rem; /* lift into the title row above the carousel */
+    border: 1px solid oklch(100% 0 0 / 0.25);
+    border-radius: 50%;
+    background: oklch(100% 0 0 / 0.1);
+    color: var(--on-brand);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  
+  .product-carousel::scroll-button(*):hover:not(:disabled) {
+    background: oklch(100% 0 0 / 0.22);
+  }
+  
+  .product-carousel::scroll-button(*):disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  
+  /* both sit in the row above the carousel, flush with its right edge -
+     the left arrow is shifted over by one button width */
+  .product-carousel::scroll-button(left) {
+    content: "◄" / "Previous products";
+    position-area: block-start span-inline-start;
+    justify-self: end;
+    translate: calc(-100% - 0.5rem) 0;
+  }
+  
+  .product-carousel::scroll-button(right) {
+    content: "►" / "Next products";
+    position-area: block-start span-inline-start;
+    justify-self: end;
+  }
+  
+  .product-carousel::scroll-marker-group {
+    position: fixed;
+    position-anchor: --products;
+    position-area: block-end;
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+  }
+  
+  .product-skeleton::scroll-marker {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1px solid var(--on-brand);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  
+  .product-skeleton::scroll-marker:target-current {
+    background: var(--on-brand);
+  }
+  
+  /* --- Shop all --- */
+  
+  .shop-all {
+    display: block;
+    width: fit-content;
+    margin-inline: auto;
+    margin-top: 2.5rem; /* clear of the carousel dots, which hang below the cards */
+    padding: 0.75rem 1.6rem;
+    background: var(--paper);
+    color: var(--brand-deep);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 999px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .shop-all::after {
+    content: " →";
+    display: inline-block;
+    transition: transform 0.15s ease;
+  }
+  
+  .shop-all:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -8px oklch(0% 0 0 / 0.45);
+  }
+  
+  .shop-all:hover::after { transform: translateX(3px); }
+  
+  .shop-all:focus-visible {
+    outline: 2px solid var(--on-brand);
+    outline-offset: 3px;
+  }
+  
+  /* Removed for testing */
+  
+  /* /* Mobile: outlook days and products become snap carousels showing ~1.5 cards.
+     NB: must come after the base carousel rules or those win the cascade */
+  @media (max-width: 767px) {
+    .outlook {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 68%;
+      gap: 0.75rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 0.75rem 0 0.5rem;
+    }
+  
+    .outlook .day {
+      scroll-snap-align: start;
+      border-bottom: none;
+      padding-inline: 0.7rem;
+    }
+  
+    .outlook .day:not(:last-child) { border-right: 1px solid var(--on-brand-line); }
+  
+    .product-carousel { grid-auto-columns: 62%; }
+  
+    /* swipe + snap (and the dots) make scrollbars and arrows redundant on touch layouts */
+    .outlook, .product-carousel { scrollbar-width: none; }
+    .outlook::-webkit-scrollbar, .product-carousel::-webkit-scrollbar { display: none; }
+    .product-carousel::scroll-button(*) { display: none; }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .search, .weather-col, .merch-col { animation: none; }
+    .product-skeleton::after, .current-card.loading { animation: none; }
+    .shop-all, .shop-all::after { transition: none; }
+  } */
+  
