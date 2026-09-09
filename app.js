@@ -1,0 +1,117 @@
+// Data layer for the weather panel. No DOM stuff in here yet -
+// I want to be able to run `node app.js` and sanity check the API
+// calls + merch logic before building any UI on top of it.
+
+const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+const FETCH_TIMEOUT_MS = 8000;
+
+const weatherMap = {
+  0:  { text: 'Clear sky', condition: 'default' },
+  1:  { text: 'Mainly clear', condition: 'default' },
+  2:  { text: 'Partly cloudy', condition: 'default' },
+  3:  { text: 'Overcast', condition: 'default' },
+  45: { text: 'Fog', condition: 'default' },
+  48: { text: 'Depositing rime fog', condition: 'cold' },
+  51: { text: 'Light drizzle', condition: 'rain' },
+  53: { text: 'Moderate drizzle', condition: 'rain' },
+  55: { text: 'Dense drizzle', condition: 'rain' },
+  61: { text: 'Slight rain', condition: 'rain' },
+  63: { text: 'Moderate rain', condition: 'rain' },
+  65: { text: 'Heavy rain', condition: 'rain' },
+  71: { text: 'Slight snow', condition: 'cold' },
+  73: { text: 'Moderate snow', condition: 'cold' },
+  75: { text: 'Heavy snow', condition: 'cold' },
+  95: { text: 'Thunderstorm', condition: 'rain' }
+};
+
+const merchMessages = {
+  rain: 'Waterproofs are 20% off this week',
+  cold: 'Time for knitwear',
+  default: 'Check out our new arrivals'
+};
+
+async function fetchJSON(url) {
+  let res;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  } catch (err) {
+    if (err.name === 'TimeoutError') throw new Error('The weather service is taking too long to respond.');
+    throw new Error('Could not reach the weather service. Check your connection.');
+  }
+  if (!res.ok) throw new Error('The weather service returned an error. Please try again.');
+  return res.json();
+}
+
+// NB: the API omits `results` entirely when nothing matches, hence the || []
+async function geocode(name) {
+  const url = `${GEO_URL}?name=${encodeURIComponent(name)}&count=5&countryCode=GB`;
+  const data = await fetchJSON(url);
+  return data.results || [];
+}
+
+async function getForecast(latitude, longitude) {
+  const params = new URLSearchParams({
+    latitude,
+    longitude,
+    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation,is_day',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+    timezone: 'Europe/London',
+    forecast_days: 4
+  });
+  return fetchJSON(`${FORECAST_URL}?${params}`);
+}
+
+function describeWeather(code) {
+  return weatherMap[code] || { text: 'Unknown', condition: 'default' };
+}
+
+// Rain takes priority. The extra feels-like check is because a clear day
+// at 2 degrees would otherwise show "new arrivals" instead of knitwear.
+function getMerchCondition(code, feelsLike) {
+  let { condition } = describeWeather(code);
+  if (condition === 'default' && feelsLike < 8) condition = 'cold';
+  return condition;
+}
+
+// Quick smoke test - only runs under node, browser skips this block
+const isNode = typeof window === 'undefined';
+if (isNode) {
+  demo();
+}
+
+async function demo() {
+  const assert = (cond, msg) => { if (!cond) throw new Error(`FAIL: ${msg}`); };
+
+  // pure logic first, no network needed for these
+  assert(describeWeather(61).text === 'Slight rain', 'code 61 maps to rain text');
+  assert(describeWeather(999).text === 'Unknown', 'unknown code falls back safely');
+  assert(getMerchCondition(61, 15) === 'rain', 'rain code -> rain');
+  assert(getMerchCondition(0, 2) === 'cold', 'clear but 2C feels-like -> cold');
+  assert(getMerchCondition(0, 15) === 'default', 'clear and mild -> default');
+  console._log('Logic checks passed.\n');
+
+  // now hit the real endpoints
+  const noResults = await geocode('m1 5gl');
+  assert(noResults.length === 0, 'bogus name returns empty results');
+  console._log('No-results check passed (zzzzzzzz -> 0 results).\n');
+
+  const [place] = await geocode('London');
+  assert(place, 'Manchester geocodes');
+  console._log(`Location: ${place.name}, ${place.admin1} (${place.latitude}, ${place.longitude})\n`);
+
+  const forecast = await getForecast(place.latitude, place.longitude);
+  const c = forecast.current;
+  const condition = getMerchCondition(c.weather_code, c.apparent_temperature);
+  console._log(`Now: ${c.temperature_2m}°C (feels like ${c.apparent_temperature}°C), ` +
+    `${describeWeather(c.weather_code).text}, wind ${c.wind_speed_10m} km/h`);
+  console._log(`Merch: [${condition}] "${merchMessages[condition]}"\n`);
+
+  const d = forecast.daily;
+  console._log('3-day outlook:');
+  for (let i = 1; i <= 3; i++) {
+    const day = new Date(d.time[i]).toLocaleDateString('en-GB', { weekday: 'short' });
+    console._log(`  ${day}: ${d.temperature_2m_max[i]}° / ${d.temperature_2m_min[i]}°, ` +
+      `${d.precipitation_probability_max[i]}% rain, ${describeWeather(d.weather_code[i]).text}`);
+  }
+}
