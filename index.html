@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weather Panel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="panel">
+
+    <!-- Left column: search + weather -->
+    <section class="weather-col">
+      <div class="search">
+        <label for="search-input">Find your local weather</label>
+        <input id="search-input" type="search" placeholder="Search a UK town or city..."
+               autocomplete="off" aria-controls="search-results">
+        <ul id="search-results" class="search-results"></ul>
+      </div>
+
+      <!-- polite for screen readers -->
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <div id="current" class="current-card"></div>
+
+      <div id="outlook" class="outlook"></div>
+    </section>
+
+    <!-- Right column: merchandising -->
+    <section class="merch-col">
+      <h2 id="merch-message" class="merch-message"></h2>
+
+      <!-- placeholder product cards, real ones would come from shopify-->
+      <div class="product-grid" aria-hidden="true">
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+      </div>
+
+      <a href="#" class="shop-all">Shop All Outerwear</a>
+    </section>
+
+  </main>
+</body>
+</html>
