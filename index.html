@@ -10,15 +10,18 @@
 <body>
   <main class="panel">
 
-    <!-- Left column: search + weather -->
-    <section class="weather-col">
-      <div class="search">
-        <label for="search-input">Find your local weather</label>
-        <input id="search-input" type="search" placeholder="Search a UK town or city..."
-               autocomplete="off" aria-controls="search-results">
-        <ul id="search-results" class="search-results"></ul>
-      </div>
+    <!-- Search spans the full panel, columns sit underneath -->
+    <div class="search">
+      <label for="search-input">Where are you off to?</label>
+      <input id="search-input" type="search" placeholder="Search a UK town or city..."
+             autocomplete="off" aria-controls="search-results">
 
+      <!-- Buttons to select a location/Native button would be better on mobile-->
+      <ul id="search-results" class="search-results"></ul>
+    </div>
+
+    <!-- Left column: weather -->
+    <section class="weather-col">
       <!-- polite for screen readers -->
       <p id="status" class="status" role="status" aria-live="polite"></p>
 
@@ -29,10 +32,13 @@
 
     <!-- Right column: merchandising -->
     <section class="merch-col">
+      <p class="merch-eyebrow">Planning your next trip?</p>
       <h2 id="merch-message" class="merch-message"></h2>
 
       <!-- placeholder product cards, real ones would come from shopify-->
-      <div class="product-grid" aria-hidden="true">
+      <div class="product-carousel" aria-hidden="true">
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
         <div class="product-skeleton"></div>
         <div class="product-skeleton"></div>
         <div class="product-skeleton"></div>

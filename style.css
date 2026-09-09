@@ -1,0 +1,287 @@
+/* Single accent colour + tints, everything else stays neutral */
+:root {
+  --brand: #435f32;
+  --brand-dark: #32471f;
+  --brand-tint: #eef2ea;
+  --text: #1f2419;
+  --muted: #6b7263;
+  --line: #dfe3da;
+  --on-brand-line: rgba(255, 255, 255, 0.25);
+  --skeleton: rgba(255, 255, 255, 0.18);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: #fafaf7;
+  line-height: 1.4;
+}
+
+/* Mobile first: one column. Desktop: weather 35% / merch 65% */
+.panel {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 1rem auto;
+  padding: 1.25rem;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 14px;
+}
+
+@media (min-width: 768px) {
+  .panel {
+    grid-template-columns: 35% 1fr;
+    padding: 2rem 1.5rem;
+  }
+
+  /* search is the panel's header row */
+  .search {
+    grid-column: 1 / -1;
+    max-width: 420px;
+  }
+}
+
+/* --- Left column: search + weather --- */
+
+.search label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+#search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+#search-input:focus {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+.search-results {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.search-results button {
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  font-size: 1rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-top: none;
+  cursor: pointer;
+}
+
+.search-results li:first-child button { border-top: 1px solid var(--line); border-radius: 6px 6px 0 0; }
+.search-results li:last-child button { border-radius: 0 0 6px 6px; }
+
+.search-results button:hover,
+.search-results button:focus-visible {
+  background: var(--brand-tint);
+}
+
+.status {
+  min-height: 1.4em; /* reserve the line so messages don't shift the layout */
+  margin: 0.75rem 0 0;
+  color: var(--brand-tint);
+  font-size: 0.9rem;
+}
+
+.current-card {
+  margin-top: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--brand-dark);
+  color: #fff;
+  border-radius: 10px;
+}
+
+.current-card p { margin: 0.15rem 0; }
+
+.current-card .place-name {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.store-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--on-brand-line);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.current-card .temp {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* weather card reuses the skeleton pulse while fetching */
+.current-card.loading { animation: pulse 1.2s ease-in-out infinite; }
+
+.outlook { margin-top: 1rem; }
+
+.outlook .day {
+  display: grid;
+  grid-template-columns: 2.5rem 4.5rem 4.5rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--on-brand-line);
+  font-size: 0.9rem;
+}
+
+.outlook .day-name { font-weight: 600; }
+
+/* --- Right column: merchandising --- */
+
+.merch-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-tint);
+}
+
+.merch-message {
+  margin: 0 0 1rem;
+  padding-right: 5rem; /* keeps the headline clear of the carousel arrows */
+  font-size: 1.5rem;
+  min-height: 1.2em; /* no jump when the message arrives */
+}
+
+@media (min-width: 768px) {
+  .merch-message { font-size: 1.9rem; }
+}
+
+/* CSS-only carousel: ~2.5 cards visible, snap per card */
+.product-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 38%;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--on-brand-line) transparent;
+}
+
+.product-carousel .product-skeleton {
+  scroll-snap-align: start;
+}
+
+/* Carousel arrows + pagination dots (CSS Overflow 5, Chrome 135+).
+   Firefox/Safari don't support these yet and simply ignore the rules,
+   so they keep the plain swipe/scroll carousel - no JS fallback needed */
+.product-carousel {
+  scroll-marker-group: after;
+  anchor-name: --products;
+  margin-bottom: 1.25rem; /* room for the dots */
+}
+
+.product-carousel::scroll-button(*) {
+  position: fixed;
+  position-anchor: --products;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 1.1rem; /* lift into the title row above the carousel */
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.product-carousel::scroll-button(*):disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* both sit in the row above the carousel, flush with its right edge -
+   the left arrow is shifted over by one button width */
+.product-carousel::scroll-button(left) {
+  content: "◄" / "Previous products";
+  position-area: block-start span-inline-start;
+  justify-self: end;
+  translate: calc(-100% - 0.5rem) 0;
+}
+
+.product-carousel::scroll-button(right) {
+  content: "►" / "Next products";
+  position-area: block-start span-inline-start;
+  justify-self: end;
+}
+
+.product-carousel::scroll-marker-group {
+  position: fixed;
+  position-anchor: --products;
+  position-area: block-end;
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.product-skeleton::scroll-marker {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.product-skeleton::scroll-marker:target-current {
+  background: #fff;
+}
+
+.product-skeleton {
+  aspect-ratio: 4 / 5;
+  border-radius: 10px;
+  background: var(--skeleton);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-skeleton, .current-card.loading { animation: none; }
+}
+
+.shop-all {
+  display: inline-block;
+  margin-top: 1.25rem;
+  padding: 0.7rem 1.5rem;
+  background: #fff;
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.shop-all:hover { background: var(--brand-tint); }
+
+.shop-all:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

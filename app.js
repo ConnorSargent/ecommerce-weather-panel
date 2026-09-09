@@ -1,10 +1,12 @@
-// Data layer for the weather panel. No DOM stuff in here yet -
-// I want to be able to run `node app.js` and sanity check the API
-// calls + merch logic before building any UI on top of it.
+// Weather panel - Open-Meteo data layer up top, UI wiring below.
 
 const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const FETCH_TIMEOUT_MS = 8000;
+
+// shown before the user picks anything - the retailer's home city, so it gets
+// an "our store" badge. Would be a theme setting if this becomes a Shopify section
+const DEFAULT_LOCATION = { name: 'Manchester', latitude: 53.48, longitude: -2.24, isStore: true };
 
 const weatherMap = {
   0:  { text: 'Clear sky', condition: 'default' },
@@ -118,13 +120,23 @@ function initUI() {
 
   input.addEventListener('input', runSearch);
 
-  // never show an empty panel - default to Manchester *ideally the retailers location* (TODO: remember last choice, make into a config)
-  loadWeather({ name: 'Manchester', latitude: 53.48, longitude: -2.24 });
+  // never show an empty panel - last place they picked, or the configured default
+  let place = DEFAULT_LOCATION;
+  try {
+    const saved = JSON.parse(localStorage.getItem('lastLocation'));
+    if (saved && saved.name && saved.latitude != null) place = saved;
+  } catch { /* corrupt/blocked storage - the default covers it */ }
+  loadWeather(place);
 }
 
 function selectPlace(place) {
   document.getElementById('search-results').innerHTML = '';
   document.getElementById('search-input').value = place.name;
+  try {
+    localStorage.setItem('lastLocation', JSON.stringify({
+      name: place.name, latitude: place.latitude, longitude: place.longitude
+    }));
+  } catch { /* private mode etc - remembering is a nice-to-have */ }
   loadWeather(place);
 }
 
@@ -141,7 +153,7 @@ async function loadWeather(place) {
     renderOutlook(forecast.daily);
     renderMerch(forecast.current);
   } catch (err) {
-    statusEl.textContent = err.message; // TODO: retry button
+    statusEl.textContent = err.message;
   } finally {
     currentEl.classList.remove('loading');
   }
@@ -156,7 +168,14 @@ function renderCurrent(place, c) {
     <p>${describeWeather(c.weather_code).text}</p>
     <p>Wind ${Math.round(c.wind_speed_10m)} km/h</p>`;
   // name comes from the geocoding API, so treat it as text not markup
-  el.querySelector('.place-name').textContent = place.name;
+  const nameEl = el.querySelector('.place-name');
+  nameEl.textContent = place.name;
+  if (place.isStore) {
+    const badge = document.createElement('span');
+    badge.className = 'store-badge';
+    badge.textContent = 'Our store';
+    nameEl.append(badge);
+  }
 }
 
 // daily arrays include today at index 0 - the outlook is the NEXT 3 days
@@ -180,46 +199,4 @@ function renderMerch(c) {
   document.getElementById('merch-message').textContent = merchMessages[condition];
 }
 
-// Quick smoke test - only runs under node, browser skips this and wires the UI instead
-const isNode = typeof window === 'undefined';
-if (isNode) {
-  demo();
-} else {
-  document.addEventListener('DOMContentLoaded', initUI);
-}
-
-async function demo() {
-  const assert = (cond, msg) => { if (!cond) throw new Error(`FAIL: ${msg}`); };
-
-  // pure logic first, no network needed for these
-  assert(describeWeather(61).text === 'Slight rain', 'code 61 maps to rain text');
-  assert(describeWeather(999).text === 'Unknown', 'unknown code falls back safely');
-  assert(getMerchCondition(61, 15) === 'rain', 'rain code -> rain');
-  assert(getMerchCondition(0, 2) === 'cold', 'clear but 2C feels-like -> cold');
-  assert(getMerchCondition(0, 15) === 'default', 'clear and mild -> default');
-  console._log('Logic checks passed.\n');
-
-  // now hit the real endpoints
-  const noResults = await geocode('m1 5gl');
-  assert(noResults.length === 0, 'bogus name returns empty results');
-  console._log('No-results check passed (zzzzzzzz -> 0 results).\n');
-
-  const [place] = await geocode('London');
-  assert(place, 'Manchester geocodes');
-  console._log(`Location: ${place.name}, ${place.admin1} (${place.latitude}, ${place.longitude})\n`);
-
-  const forecast = await getForecast(place.latitude, place.longitude);
-  const c = forecast.current;
-  const condition = getMerchCondition(c.weather_code, c.apparent_temperature);
-  console._log(`Now: ${c.temperature_2m}°C (feels like ${c.apparent_temperature}°C), ` +
-    `${describeWeather(c.weather_code).text}, wind ${c.wind_speed_10m} km/h`);
-  console._log(`Merch: [${condition}] "${merchMessages[condition]}"\n`);
-
-  const d = forecast.daily;
-  console._log('3-day outlook:');
-  for (let i = 1; i <= 3; i++) {
-    const day = new Date(d.time[i]).toLocaleDateString('en-GB', { weekday: 'short' });
-    console._log(`  ${day}: ${d.temperature_2m_max[i]}° / ${d.temperature_2m_min[i]}°, ` +
-      `${d.precipitation_probability_max[i]}% rain, ${describeWeather(d.weather_code[i]).text}`);
-  }
-}
+document.addEventListener('DOMContentLoaded', initUI);
