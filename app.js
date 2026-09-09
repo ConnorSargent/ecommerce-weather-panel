@@ -74,10 +74,64 @@ function getMerchCondition(code, feelsLike) {
   return condition;
 }
 
-// Quick smoke test - only runs under node, browser skips this block
+// --- UI wiring, browser only below this point ---
+
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
+function initUI() {
+  const input = document.getElementById('search-input');
+  const resultsEl = document.getElementById('search-results');
+  const statusEl = document.getElementById('status');
+
+  const runSearch = debounce(async () => {
+    const query = input.value.trim();
+    resultsEl.innerHTML = '';
+    statusEl.textContent = '';
+    if (query.length < 2) return; // geocoder needs 2+ chars anyway
+
+    try {
+      const places = await geocode(query);
+      if (input.value.trim() !== query) return; // user kept typing, this response is stale
+      if (!places.length) {
+        statusEl.textContent = `No UK locations found for "${query}"`;
+        return;
+      }
+      for (const place of places) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = place.admin1 ? `${place.name}, ${place.admin1}` : place.name;
+        btn.addEventListener('click', () => selectPlace(place));
+        const li = document.createElement('li');
+        li.appendChild(btn);
+        resultsEl.appendChild(li);
+      }
+    } catch (err) {
+      statusEl.textContent = err.message;
+    }
+  }, 300);
+
+  input.addEventListener('input', runSearch);
+}
+
+function selectPlace(place) {
+  document.getElementById('search-results').innerHTML = '';
+  document.getElementById('search-input').value = place.name;
+  // TODO 2c: load the forecast here
+  console.log('selected:', place.name, place.latitude, place.longitude);
+}
+
+// Quick smoke test - only runs under node, browser skips this and wires the UI instead
 const isNode = typeof window === 'undefined';
 if (isNode) {
   demo();
+} else {
+  document.addEventListener('DOMContentLoaded', initUI);
 }
 
 async function demo() {
